@@ -5,8 +5,8 @@ import fs from 'fs';
 import * as ethutil from '../src/utils/ethutil.js';
 import * as constants from '../src/constants.js';
 import HDWalletProvider from '@truffle/hdwallet-provider';
-import * as gamedata from '../src/gamedata/gamedata.json';
-import * as EthernautABI from 'contracts/build/contracts/Ethernaut.sol/Ethernaut.json';
+import * as gamedata from '../src/gamedata/gamedata.json' assert { type: "json" };
+import * as EthernautABI from 'contracts/build/contracts/Ethernaut.sol/Ethernaut.json' assert { type: "json" };
 
 let web3;
 let ethernaut;
@@ -25,23 +25,23 @@ async function exec() {
 
   // Determine which contracts need to be deployed.
   let count = 0;
-  if(needsDeploy(deployData.ethernaut)) {
+  if (needsDeploy(deployData.ethernaut)) {
     count++
     console.log(colors.red(`(${count}) Will deploy Ethernaut.sol!`))
   }
   gamedata.default.levels.map(level => {
-    if(needsDeploy(deployData[level.deployId])) {
+    if (needsDeploy(deployData[level.deployId])) {
       count++
       console.log(colors.cyan(`(${count}) Will deploy ${level.levelContract} (${level.name})`))
     }
   })
 
-  if(count === 0) {
+  if (count === 0) {
     console.log(colors.gray(`No actions to perform, exiting.`));
     return;
   }
 
-  if(await confirmDeployment()) {
+  if (await confirmDeployment()) {
     await deployContracts(deployData)
     storeDeployData(DEPLOY_DATA_PATH, deployData)
     console.log("Done");
@@ -58,13 +58,13 @@ async function deployContracts(deployData) {
   }
 
   let from = constants.ADDRESSES[constants.ACTIVE_NETWORK.name];
-  if(!from) from = (await web3.eth.getAccounts())[0];
+  if (!from) from = (await web3.eth.getAccounts())[0];
   console.log("FROM: ", from)
 
   // Deploy/retrieve ethernaut contract
-  const Ethernaut = await ethutil.getTruffleContract(EthernautABI.default, {from})
-  if(needsDeploy(deployData.ethernaut)) {
-		console.log(deployData);
+  const Ethernaut = await ethutil.getTruffleContract(EthernautABI.default, { from })
+  if (needsDeploy(deployData.ethernaut)) {
+    console.log(deployData);
     console.log(`Deploying Ethernaut.sol...`);
     ethernaut = await Ethernaut.new(props)
     console.log(colors.yellow(`  Ethernaut: ${ethernaut.address}`));
@@ -80,12 +80,12 @@ async function deployContracts(deployData) {
   const promises = gamedata.default.levels.map(async level => {
     // console.log('level: ', level);
     return new Promise(async resolve => {
-      if(needsDeploy(deployData[level.deployId])) {
+      if (needsDeploy(deployData[level.deployId])) {
         console.log(`Deploying ${level.levelContract}, deployId: ${level.deployId}...`);
 
         // Deploy contract
         const LevelABI = JSON.parse(fs.readFileSync(`contracts/build/contracts/levels/${level.levelContract}/${withoutExtension(level.levelContract)}.json`, 'utf-8'))
-        const Contract = await ethutil.getTruffleContract(LevelABI, {from})
+        const Contract = await ethutil.getTruffleContract(LevelABI, { from })
         const contract = await Contract.new(...level.deployParams, props)
         console.log(colors.yellow(`  ${level.name}: ${contract.address}`));
         deployData[level.deployId] = contract.address
@@ -116,7 +116,7 @@ function withoutExtension(str) {
 }
 
 function needsDeploy(deployAddress) {
-  if(constants.ACTIVE_NETWORK === constants.NETWORKS.LOCAL) return true
+  if (constants.ACTIVE_NETWORK === constants.NETWORKS.LOCAL) return true
   return deployAddress === undefined || deployAddress === 'x'
 }
 
@@ -124,7 +124,7 @@ function initWeb3() {
   return new Promise(async (resolve, reject) => {
 
     let provider
-    if(constants.ACTIVE_NETWORK === constants.NETWORKS.LOCAL) {
+    if (constants.ACTIVE_NETWORK === constants.NETWORKS.LOCAL) {
       const providerUrl = `${constants.ACTIVE_NETWORK.url}:${constants.ACTIVE_NETWORK.port}`
       console.log(colors.gray(`connecting web3 to '${providerUrl}'...`));
       provider = new Web3.providers.HttpProvider(providerUrl);
@@ -138,7 +138,7 @@ function initWeb3() {
     web3 = new Web3(provider)
 
     web3.eth.net.isListening((err, res) => {
-      if(err) {
+      if (err) {
         console.log('error connecting web3:', err);
         reject()
         return
@@ -154,7 +154,7 @@ function loadDeployData(path) {
   try {
     return JSON.parse(fs.readFileSync(path, 'utf8'))
   }
-  catch(err){
+  catch (err) {
     return {}
   }
 }
@@ -166,7 +166,7 @@ function storeDeployData(path, deployData) {
 
 function confirmDeployment() {
   return new Promise((resolve, reject) => {
-    if(PROMPT_ON_DEVELOP || constants.ACTIVE_NETWORK !== constants.NETWORKS.LOCAL) {
+    if (PROMPT_ON_DEVELOP || constants.ACTIVE_NETWORK !== constants.NETWORKS.LOCAL) {
       const options = {
         properties: {
           confirmDeployment: {
